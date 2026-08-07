@@ -40,7 +40,7 @@ function generateWeeklyMealPlan(macros) {
 
       rows.push({
         day,
-        mealType,
+        meal_type: mealType,
         variant1: pair[0],
         variant2: pair[1],
         calories: mealCalories,

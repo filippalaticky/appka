@@ -9,12 +9,13 @@ function round(value) {
   return Math.round(value * 100) / 100;
 }
 
-function calculateHealthMetrics({ height, weight, activityLevel, goal }) {
+function calculateHealthMetrics({ height, weight, activityLevel, goal, age, gender }) {
   const heightMeters = Number(height) / 100;
   const bmi = Number(weight) / (heightMeters * heightMeters);
   const idealWeight = 22 * (heightMeters * heightMeters);
 
-  const bmr = 10 * Number(weight) + 6.25 * Number(height) - 5 * 30 + 5;
+  const genderOffset = gender === "zena" ? -161 : 5;
+  const bmr = 10 * Number(weight) + 6.25 * Number(height) - 5 * Number(age) + genderOffset;
   const tdee = bmr * (ACTIVITY_MULTIPLIERS[activityLevel] || 1.375);
 
   let calories = tdee;

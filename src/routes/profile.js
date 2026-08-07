@@ -22,6 +22,14 @@ function normalizeGoal(value) {
   return value;
 }
 
+function normalizeGender(value) {
+  const allowed = new Set(["muz", "zena"]);
+  if (!allowed.has(value)) {
+    return null;
+  }
+  return value;
+}
+
 router.get("/", authenticate, asyncHandler(async (req, res) => {
   const result = await query("SELECT * FROM profiles WHERE user_id = $1", [req.user.id]);
   const profile = result.rows[0];
@@ -34,21 +42,33 @@ router.get("/", authenticate, asyncHandler(async (req, res) => {
     height: Number(profile.height),
     weight: Number(profile.weight),
     activityLevel: profile.activity_level,
-    goal: profile.goal
+    goal: profile.goal,
+    age: Number(profile.age),
+    gender: profile.gender
   });
 
   return res.json({ profile, calculations });
 }));
 
 router.post("/", authenticate, asyncHandler(async (req, res) => {
-  const { name, height, weight, activityLevel, goal } = req.body;
+  const { name, height, weight, activityLevel, goal, age, gender } = req.body;
 
   const parsedHeight = Number(height);
   const parsedWeight = Number(weight);
+  const parsedAge = Number(age);
   const normalizedActivity = normalizeActivityLevel(activityLevel);
   const normalizedGoal = normalizeGoal(goal);
+  const normalizedGender = normalizeGender(gender);
 
-  if (!name || Number.isNaN(parsedHeight) || Number.isNaN(parsedWeight) || !normalizedActivity || !normalizedGoal) {
+  if (
+    !name ||
+    Number.isNaN(parsedHeight) ||
+    Number.isNaN(parsedWeight) ||
+    Number.isNaN(parsedAge) ||
+    !normalizedActivity ||
+    !normalizedGoal ||
+    !normalizedGender
+  ) {
     return res.status(400).json({ message: "Skontroluj formulár a skús znova." });
   }
 
@@ -56,24 +76,41 @@ router.post("/", authenticate, asyncHandler(async (req, res) => {
     return res.status(400).json({ message: "Hodnoty výšky alebo váhy sú mimo rozsah." });
   }
 
+  if (parsedAge < 15 || parsedAge > 90) {
+    return res.status(400).json({ message: "Zadaj vek v rozsahu 15 až 90 rokov." });
+  }
+
   const calculations = calculateHealthMetrics({
     height: parsedHeight,
     weight: parsedWeight,
     activityLevel: normalizedActivity,
-    goal: normalizedGoal
+    goal: normalizedGoal,
+    age: parsedAge,
+    gender: normalizedGender
   });
 
   const saveResult = await query(
-    `INSERT INTO profiles (user_id, name, height, weight, activity_level, goal)
-     VALUES ($1, $2, $3, $4, $5, $6)
+    `INSERT INTO profiles (user_id, name, height, weight, age, gender, activity_level, goal)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
      ON CONFLICT (user_id)
      DO UPDATE SET name = EXCLUDED.name,
                    height = EXCLUDED.height,
                    weight = EXCLUDED.weight,
+                   age = EXCLUDED.age,
+                   gender = EXCLUDED.gender,
                    activity_level = EXCLUDED.activity_level,
                    goal = EXCLUDED.goal
      RETURNING *`,
-    [req.user.id, name.trim(), parsedHeight, parsedWeight, normalizedActivity, normalizedGoal]
+    [
+      req.user.id,
+      name.trim(),
+      parsedHeight,
+      parsedWeight,
+      parsedAge,
+      normalizedGender,
+      normalizedActivity,
+      normalizedGoal
+    ]
   );
 
   return res.json({

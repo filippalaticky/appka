@@ -10,6 +10,8 @@ CREATE TABLE IF NOT EXISTS profiles (
   name TEXT NOT NULL,
   height NUMERIC(6,2) NOT NULL,
   weight NUMERIC(6,2) NOT NULL,
+  age INTEGER NOT NULL,
+  gender TEXT NOT NULL,
   activity_level TEXT NOT NULL,
   goal TEXT NOT NULL
 );

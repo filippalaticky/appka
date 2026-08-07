@@ -3,6 +3,11 @@ const profilesCount = document.getElementById("profiles-count");
 const mealRowsCount = document.getElementById("meal-rows-count");
 const usersList = document.getElementById("users-list");
 const logoutBtn = document.getElementById("logout-btn");
+const MEAL_TYPE_LABELS = {
+  ranajky: "Raňajky",
+  obed: "Obed",
+  vecera: "Večera"
+};
 
 function renderUsers(users) {
   usersList.innerHTML = "";
@@ -19,7 +24,9 @@ function renderUsers(users) {
       <div class="mt-2 text-sm text-slate-200">
         <p><strong>Meno:</strong> ${profile.name}</p>
         <p><strong>Výška:</strong> ${profile.height} cm</p>
+        <p><strong>Vek:</strong> ${profile.age}</p>
         <p><strong>Váha:</strong> ${profile.weight} kg</p>
+        <p><strong>Pohlavie:</strong> ${profile.gender}</p>
         <p><strong>Aktivita:</strong> ${profile.activity_level}</p>
         <p><strong>Cieľ:</strong> ${profile.goal}</p>
       </div>`
@@ -29,7 +36,7 @@ function renderUsers(users) {
       .slice(0, 6)
       .map(
         (row) =>
-          `<li class="text-sm text-slate-300">${row.day} • ${row.meal_type}: ${row.variant1} | ${row.variant2}</li>`
+          `<li class="text-sm text-slate-300">${row.day} • ${MEAL_TYPE_LABELS[row.meal_type] || row.meal_type}: ${row.variant1} | ${row.variant2}</li>`
       )
       .join("");
 

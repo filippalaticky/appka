@@ -18,6 +18,10 @@ async function initDb() {
   const schemaPath = path.join(__dirname, "..", "database", "schema.sql");
   const schemaSql = fs.readFileSync(schemaPath, "utf8");
   await pool.query(schemaSql);
+  await pool.query("ALTER TABLE profiles ADD COLUMN IF NOT EXISTS age INTEGER");
+  await pool.query("ALTER TABLE profiles ADD COLUMN IF NOT EXISTS gender TEXT");
+  await pool.query("UPDATE profiles SET age = 30 WHERE age IS NULL");
+  await pool.query("UPDATE profiles SET gender = 'muz' WHERE gender IS NULL");
 
   const adminEmail = process.env.ADMIN_EMAIL || "admin@example.com";
   const adminPassword = process.env.ADMIN_PASSWORD || "admin123456";

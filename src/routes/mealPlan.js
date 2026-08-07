@@ -31,7 +31,9 @@ router.post("/generate", authenticate, asyncHandler(async (req, res) => {
     height: Number(profile.height),
     weight: Number(profile.weight),
     activityLevel: profile.activity_level,
-    goal: profile.goal
+    goal: profile.goal,
+    age: Number(profile.age),
+    gender: profile.gender
   });
 
   const weeklyRows = generateWeeklyMealPlan(macros);
@@ -48,7 +50,7 @@ router.post("/generate", authenticate, asyncHandler(async (req, res) => {
         [
           req.user.id,
           row.day,
-          row.mealType,
+          row.meal_type,
           row.variant1,
           row.variant2,
           row.calories,

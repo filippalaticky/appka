@@ -8,6 +8,11 @@ const logoutBtn = document.getElementById("logout-btn");
 const adminLink = document.getElementById("admin-link");
 
 let latestCalculations = null;
+const MEAL_TYPE_LABELS = {
+  ranajky: "Raňajky",
+  obed: "Obed",
+  vecera: "Večera"
+};
 
 function setMessage(message, isError = false) {
   profileMessage.textContent = message;
@@ -60,7 +65,7 @@ function renderMealPlan(rows) {
       .map(
         (meal) => `
           <div class="mt-4">
-            <p class="font-semibold uppercase text-teal-300">${meal.meal_type}</p>
+            <p class="font-semibold uppercase text-teal-300">${MEAL_TYPE_LABELS[meal.meal_type || meal.mealType] || "Jedlo"}</p>
             <p class="text-sm text-slate-200 mt-1">1) ${meal.variant1}</p>
             <p class="text-sm text-slate-200">2) ${meal.variant2}</p>
             <div class="mt-2">
@@ -100,7 +105,9 @@ async function loadProfile() {
 
   document.getElementById("name").value = data.profile.name || "";
   document.getElementById("height").value = Number(data.profile.height) || "";
+  document.getElementById("age").value = Number(data.profile.age) || "";
   document.getElementById("weight").value = Number(data.profile.weight) || "";
+  document.getElementById("gender").value = data.profile.gender || "muz";
   document.getElementById("activity-level").value = data.profile.activity_level || "1-2x";
   document.getElementById("goal").value = data.profile.goal || "udrzat";
 
@@ -123,7 +130,9 @@ profileForm.addEventListener("submit", async (event) => {
   const payload = {
     name: document.getElementById("name").value,
     height: document.getElementById("height").value,
+    age: document.getElementById("age").value,
     weight: document.getElementById("weight").value,
+    gender: document.getElementById("gender").value,
     activityLevel: document.getElementById("activity-level").value,
     goal: document.getElementById("goal").value
   };

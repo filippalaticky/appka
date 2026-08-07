@@ -10,7 +10,7 @@ router.use(authenticate, requireRole("admin"));
 router.get("/dashboard", asyncHandler(async (req, res) => {
   const usersResult = await query("SELECT id, email, role FROM users ORDER BY id ASC");
   const profilesResult = await query(
-    "SELECT user_id, name, height, weight, activity_level, goal FROM profiles ORDER BY user_id ASC"
+    "SELECT user_id, name, height, weight, age, gender, activity_level, goal FROM profiles ORDER BY user_id ASC"
   );
   const mealsResult = await query(
     `SELECT user_id, day, meal_type, variant1, variant2, calories, protein, carbs, fat, fiber
