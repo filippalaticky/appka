@@ -5,25 +5,26 @@ const errorEl = document.getElementById("error-message");
 const modeLoginBtn = document.getElementById("mode-login");
 const modeRegisterBtn = document.getElementById("mode-register");
 const submitBtn = document.getElementById("submit-btn");
+const modeHint = document.getElementById("mode-hint");
 
 let mode = "login";
 
 function renderMode() {
-  const activeClasses = ["border-teal-400", "text-teal-200"];
-  const inactiveClasses = ["border-slate-500", "text-slate-200"];
+  const isLogin = mode === "login";
 
-  modeLoginBtn.classList.remove(...activeClasses, ...inactiveClasses);
-  modeRegisterBtn.classList.remove(...activeClasses, ...inactiveClasses);
+  // Vlastné triedy namiesto Tailwind utilít - farba aktívnej záložky tak
+  // nezávisí od poradia štýlov a je na tmavom pozadí jednoznačne vidieť.
+  modeLoginBtn.classList.toggle("is-active", isLogin);
+  modeLoginBtn.classList.toggle("is-inactive", !isLogin);
+  modeRegisterBtn.classList.toggle("is-active", !isLogin);
+  modeRegisterBtn.classList.toggle("is-inactive", isLogin);
 
-  if (mode === "login") {
-    modeLoginBtn.classList.add(...activeClasses);
-    modeRegisterBtn.classList.add(...inactiveClasses);
-    submitBtn.textContent = "Prihlásiť sa";
-  } else {
-    modeRegisterBtn.classList.add(...activeClasses);
-    modeLoginBtn.classList.add(...inactiveClasses);
-    submitBtn.textContent = "Vytvoriť účet";
-  }
+  submitBtn.textContent = isLogin ? "Prihlásiť sa" : "Vytvoriť účet";
+  modeHint.textContent = isLogin
+    ? "Prihlás sa existujúcim účtom."
+    : "Vytvor si nový účet. Heslo musí mať aspoň 8 znakov.";
+
+  errorEl.classList.add("hidden");
 }
 
 function showError(message) {

@@ -90,6 +90,20 @@ body {
   opacity: 0.95;
 }
 
+/* Prepínač Prihlásenie / Registrácia - aktívna záložka musí byť jasne vidieť,
+   inak to pôsobí, akoby kliknutie nič neurobilo. */
+.mode-tab.is-active {
+  background: linear-gradient(90deg, #14b8a6, #0ea5e9);
+  border-color: transparent;
+  color: #ffffff;
+}
+
+.mode-tab.is-inactive {
+  background: rgba(30, 41, 59, 0.85);
+  border-color: rgba(100, 116, 139, 0.6);
+  color: #cbd5e1;
+}
+
 .macro-row {
   display: flex;
   justify-content: space-between;
