@@ -129,6 +129,28 @@ async function openMealDetailModal(mealId, triggerButton) {
   modalCloseBtn.focus();
 }
 
+// Jedálničky vygenerované staršou verziou nemajú uložený detail jedla.
+// Ostanú čitateľné, ale bez rozkliknutia - stačí ich vygenerovať nanovo.
+function renderVariantButton(meal, index) {
+  const mealId = meal[`variant${index}_meal_id`];
+  const name = meal[`variant${index}`];
+  const chips = renderMacroChips(meal, `variant${index}_`);
+
+  if (!mealId) {
+    return `
+      <div class="meal-detail-btn is-static text-sm text-slate-400">
+        <span>${index}) ${name}</span>
+        <span class="block text-xs mt-1">Detail nie je uložený - vygeneruj jedálniček nanovo.</span>
+      </div>`;
+  }
+
+  return `
+    <button class="meal-detail-btn text-sm text-slate-200" data-meal-id="${mealId}">
+      <span>${index}) ${name}</span>
+      <span class="block">${chips}</span>
+    </button>`;
+}
+
 function renderMealPlan(rows) {
   if (!rows || rows.length === 0) return;
   mealPlanSection.classList.remove("hidden");
@@ -148,14 +170,8 @@ function renderMealPlan(rows) {
         (meal) => `
           <div class="mt-4">
             <p class="font-semibold uppercase text-teal-300">${MEAL_TYPE_LABELS[meal.meal_type] || "Jedlo"}</p>
-            <button class="meal-detail-btn text-sm text-slate-200" data-meal-id="${meal.variant1_meal_id}">
-              <span>1) ${meal.variant1}</span>
-              <span class="block">${renderMacroChips(meal, "variant1_")}</span>
-            </button>
-            <button class="meal-detail-btn text-sm text-slate-200" data-meal-id="${meal.variant2_meal_id}">
-              <span>2) ${meal.variant2}</span>
-              <span class="block">${renderMacroChips(meal, "variant2_")}</span>
-            </button>
+            ${renderVariantButton(meal, 1)}
+            ${renderVariantButton(meal, 2)}
           </div>`
       )
       .join("");

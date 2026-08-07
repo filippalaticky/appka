@@ -54,12 +54,24 @@ CREATE TABLE IF NOT EXISTS ingredients (
   fiber NUMERIC(8,2) NOT NULL
 );
 
+-- Na už existujúcej databáze CREATE TABLE IF NOT EXISTS vyššie nič neurobí,
+-- takže nové stĺpce treba doplniť zvlášť - inak by referencie nižšie zlyhali.
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS age INTEGER;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS gender TEXT;
+ALTER TABLE meal_plans ADD COLUMN IF NOT EXISTS variant1_meal_id INTEGER;
+ALTER TABLE meal_plans ADD COLUMN IF NOT EXISTS variant2_meal_id INTEGER;
+
 DO $$
 BEGIN
-  IF NOT EXISTS (
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_name = 'meal_plans' AND column_name = 'variant1_meal_id'
+  ) AND NOT EXISTS (
     SELECT 1
     FROM pg_constraint
     WHERE conname = 'meal_plans_variant1_meal_id_fkey'
+      AND conrelid = 'meal_plans'::regclass
   ) THEN
     ALTER TABLE meal_plans
       ADD CONSTRAINT meal_plans_variant1_meal_id_fkey
@@ -70,10 +82,15 @@ $$;
 
 DO $$
 BEGIN
-  IF NOT EXISTS (
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_name = 'meal_plans' AND column_name = 'variant2_meal_id'
+  ) AND NOT EXISTS (
     SELECT 1
     FROM pg_constraint
     WHERE conname = 'meal_plans_variant2_meal_id_fkey'
+      AND conrelid = 'meal_plans'::regclass
   ) THEN
     ALTER TABLE meal_plans
       ADD CONSTRAINT meal_plans_variant2_meal_id_fkey
