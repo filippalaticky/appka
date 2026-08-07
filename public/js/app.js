@@ -1,3 +1,5 @@
+const { escapeHtml, apiFetch } = window.appCommon;
+
 const profileForm = document.getElementById("profile-form");
 const profileMessage = document.getElementById("profile-message");
 const resultsSection = document.getElementById("results-section");
@@ -90,7 +92,7 @@ function renderMacroChips(source, prefix = "") {
 }
 
 async function openMealDetailModal(mealId, triggerButton) {
-  const response = await fetch(`/api/meal-plan/meal/${mealId}`);
+  const response = await apiFetch(`/api/meal-plan/meal/${mealId}`);
   const data = await response.json();
 
   if (!response.ok) {
@@ -108,7 +110,7 @@ async function openMealDetailModal(mealId, triggerButton) {
       (ingredient, index) => `
       <div class="ingredient-row" style="--row-index: ${index}">
         <div>
-          <p class="font-semibold text-slate-100">${ingredient.ingredient_name}</p>
+          <p class="font-semibold text-slate-100">${escapeHtml(ingredient.ingredient_name)}</p>
           <p class="text-xs text-slate-400">${formatNumber(ingredient.grams)} g</p>
         </div>
         <div class="text-right text-xs text-slate-300">
@@ -139,14 +141,14 @@ function renderVariantButton(meal, index) {
   if (!mealId) {
     return `
       <div class="meal-detail-btn is-static text-sm text-slate-400">
-        <span>${index}) ${name}</span>
+        <span>${index}) ${escapeHtml(name)}</span>
         <span class="block text-xs mt-1">Detail nie je uložený - vygeneruj jedálniček nanovo.</span>
       </div>`;
   }
 
   return `
     <button class="meal-detail-btn text-sm text-slate-200" data-meal-id="${mealId}">
-      <span>${index}) ${name}</span>
+      <span>${index}) ${escapeHtml(name)}</span>
       <span class="block">${chips}</span>
     </button>`;
 }
@@ -169,14 +171,14 @@ function renderMealPlan(rows) {
       .map(
         (meal) => `
           <div class="mt-4">
-            <p class="font-semibold uppercase text-teal-300">${MEAL_TYPE_LABELS[meal.meal_type] || "Jedlo"}</p>
+            <p class="font-semibold uppercase text-teal-300">${escapeHtml(MEAL_TYPE_LABELS[meal.meal_type] || "Jedlo")}</p>
             ${renderVariantButton(meal, 1)}
             ${renderVariantButton(meal, 2)}
           </div>`
       )
       .join("");
 
-    card.innerHTML = `<h3 class="text-lg font-semibold">${day}</h3>${mealsHtml}`;
+    card.innerHTML = `<h3 class="text-lg font-semibold">${escapeHtml(day)}</h3>${mealsHtml}`;
     mealPlanGrid.appendChild(card);
   });
 
@@ -191,7 +193,7 @@ function renderMealPlan(rows) {
 }
 
 async function getCurrentUser() {
-  const response = await fetch("/api/auth/me");
+  const response = await apiFetch("/api/auth/me");
   if (!response.ok) {
     window.location.href = "/";
     return null;
@@ -204,7 +206,7 @@ async function getCurrentUser() {
 }
 
 async function loadProfile() {
-  const response = await fetch("/api/profile");
+  const response = await apiFetch("/api/profile");
   if (!response.ok) return;
   const data = await response.json();
   if (!data.profile) return;
@@ -223,7 +225,7 @@ async function loadProfile() {
 }
 
 async function loadMealPlan() {
-  const response = await fetch("/api/meal-plan");
+  const response = await apiFetch("/api/meal-plan");
   if (!response.ok) return;
   const data = await response.json();
   renderMealPlan(data.mealPlan || []);
@@ -243,12 +245,11 @@ profileForm.addEventListener("submit", async (event) => {
     goal: document.getElementById("goal").value
   };
 
-  const response = await fetch("/api/profile", {
+  const response = await apiFetch("/api/profile", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload)
   });
-  const data = await response.json();
+  const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
     setMessage(data.message || "Nepodarilo sa uložiť profil.", true);
@@ -266,7 +267,7 @@ generatePlanBtn.addEventListener("click", async () => {
   }
 
   setMessage("Generujem jedálniček...");
-  const response = await fetch("/api/meal-plan/generate", { method: "POST" });
+  const response = await apiFetch("/api/meal-plan/generate", { method: "POST" });
   const data = await response.json();
 
   if (!response.ok) {
@@ -279,7 +280,7 @@ generatePlanBtn.addEventListener("click", async () => {
 });
 
 logoutBtn.addEventListener("click", async () => {
-  await fetch("/api/auth/logout", { method: "POST" });
+  await apiFetch("/api/auth/logout", { method: "POST" });
   window.location.href = "/";
 });
 

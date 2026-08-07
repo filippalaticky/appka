@@ -3,6 +3,8 @@ const { query } = require("../db");
 const { authenticate } = require("../middleware/auth");
 const { asyncHandler } = require("../middleware/asyncHandler");
 const { calculateHealthMetrics } = require("../utils/calculator");
+const { verifyCsrf } = require("../middleware/csrf");
+const { sanitizeText } = require("../utils/sanitize");
 
 const router = express.Router();
 
@@ -50,8 +52,10 @@ router.get("/", authenticate, asyncHandler(async (req, res) => {
   return res.json({ profile, calculations });
 }));
 
-router.post("/", authenticate, asyncHandler(async (req, res) => {
-  const { name, height, weight, activityLevel, goal, age, gender } = req.body;
+router.post("/", authenticate, verifyCsrf, asyncHandler(async (req, res) => {
+  const { height, weight, activityLevel, goal, age, gender } = req.body;
+  // Meno sa zobrazuje v admin paneli - HTML a JS z neho ide preč hneď na vstupe.
+  const name = sanitizeText(req.body && req.body.name, 80);
 
   const parsedHeight = Number(height);
   const parsedWeight = Number(weight);
@@ -103,7 +107,7 @@ router.post("/", authenticate, asyncHandler(async (req, res) => {
      RETURNING *`,
     [
       req.user.id,
-      name.trim(),
+      name,
       parsedHeight,
       parsedWeight,
       parsedAge,

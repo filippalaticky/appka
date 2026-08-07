@@ -1,3 +1,5 @@
+const { apiFetch } = window.appCommon;
+
 const form = document.getElementById("login-form");
 const errorEl = document.getElementById("error-message");
 const modeLoginBtn = document.getElementById("mode-login");
@@ -24,8 +26,25 @@ function renderMode() {
   }
 }
 
+function showError(message) {
+  // textContent, nie innerHTML - hláška môže pochádzať zo servera aj z URL.
+  errorEl.textContent = message;
+  errorEl.classList.remove("hidden");
+}
+
+/** Po odhlásení kvôli banu sa dôvod prenáša v URL. */
+function showBannedNotice() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("banned") !== "1") return false;
+  showError(params.get("reason") || "Tvoj účet bol zablokovaný.");
+  window.history.replaceState({}, "", window.location.pathname);
+  return true;
+}
+
 async function checkAuth() {
-  const response = await fetch("/api/auth/me");
+  if (showBannedNotice()) return;
+
+  const response = await fetch("/api/auth/me", { credentials: "same-origin" });
   if (!response.ok) return;
   const { user } = await response.json();
   if (user.role === "admin") {
@@ -59,17 +78,15 @@ form.addEventListener("submit", async (event) => {
   };
 
   const endpoint = mode === "login" ? "/api/auth/login" : "/api/auth/register";
-  const response = await fetch(endpoint, {
+  const response = await apiFetch(endpoint, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload)
   });
 
-  const data = await response.json();
+  const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    errorEl.textContent = data.message || "Operácia sa nepodarila.";
-    errorEl.classList.remove("hidden");
+    showError(data.message || "Operácia sa nepodarila.");
     return;
   }
 

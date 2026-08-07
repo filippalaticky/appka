@@ -6,6 +6,7 @@ services:
     buildCommand: npm install
     startCommand: npm start
     autoDeploy: true
+    healthCheckPath: /healthz
     envVars:
       - key: NODE_ENV
         value: production
@@ -15,14 +16,15 @@ services:
         fromDatabase:
           name: nutri-planner-db
           property: connectionString
+      # sync: false = hodnotu zadáš v Render dashboarde a NIKDY nie je v repozitári.
       - key: ADMIN_EMAIL
-        value: admin@example.com
+        sync: false
       - key: ADMIN_PASSWORD
-        value: admin123456
-      - key: DEMO_USER_EMAIL
-        value: user@example.com
-      - key: DEMO_USER_PASSWORD
-        value: user123456
+        sync: false
+      # Voliteľné: domény, ktoré smú volať API z iného originu (oddelené čiarkou).
+      - key: ALLOWED_ORIGINS
+        sync: false
+    # Demo účet sa v produkcii zámerne nevytvára - bol by verejne známym prístupom.
 
 databases:
   - name: nutri-planner-db

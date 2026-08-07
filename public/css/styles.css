@@ -132,6 +132,105 @@ body {
   border: 1px solid rgba(45, 212, 191, 0.4);
 }
 
+/* --- Sticky footer --- */
+/* Telo je flex stĺpec, takže footer klesne na spodok aj na krátkych stránkach,
+   ale pri dlhom obsahu sa normálne odsunie - žiadne prekrývanie. */
+.has-sticky-footer {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.has-sticky-footer > main {
+  flex: 1 0 auto;
+}
+
+.site-footer {
+  flex-shrink: 0;
+  margin-top: auto;
+  padding: 1rem;
+  text-align: center;
+  font-size: 0.8rem;
+  color: #94a3b8;
+  border-top: 1px solid rgba(100, 116, 139, 0.35);
+  background: rgba(2, 6, 23, 0.6);
+  backdrop-filter: blur(6px);
+}
+
+@media (max-width: 480px) {
+  .site-footer {
+    font-size: 0.72rem;
+    padding: 0.85rem 0.75rem;
+  }
+}
+
+/* --- Admin panel: stav používateľa a tabuľka logov --- */
+.btn-danger {
+  border-radius: 0.75rem;
+  padding: 0.65rem 1.1rem;
+  font-weight: 600;
+  background: linear-gradient(90deg, #e11d48, #f97316);
+  color: #ffffff;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.btn-danger:hover {
+  transform: translateY(-1px);
+  opacity: 0.95;
+}
+
+.status-badge {
+  display: inline-block;
+  margin-left: 0.4rem;
+  border-radius: 999px;
+  padding: 0.12rem 0.55rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.status-active {
+  background: rgba(16, 185, 129, 0.2);
+  border: 1px solid rgba(52, 211, 153, 0.45);
+  color: #6ee7b7;
+}
+
+.status-banned {
+  background: rgba(225, 29, 72, 0.2);
+  border: 1px solid rgba(251, 113, 133, 0.45);
+  color: #fda4af;
+}
+
+.table-scroll {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.log-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+  min-width: 44rem;
+}
+
+.log-table thead {
+  color: #5eead4;
+  text-align: left;
+}
+
+.log-cell {
+  padding: 0.5rem 0.6rem;
+  border-bottom: 1px solid rgba(100, 116, 139, 0.3);
+  text-align: left;
+  vertical-align: top;
+}
+
+.log-agent {
+  max-width: 22rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .meal-detail-btn {
   display: block;
   width: 100%;

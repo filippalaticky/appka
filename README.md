@@ -69,19 +69,21 @@ Tabuľky sa vytvoria automaticky pri štarte servera cez `database/schema.sql`.
 
 ## Admin prístup
 
-Admin aj demo user sa seedujú pri štarte servera podľa:
+Admin účet sa pri štarte servera vytvorí (alebo aktualizuje) podľa premenných
+`ADMIN_EMAIL` a `ADMIN_PASSWORD`. Heslá **nikdy nie sú v kóde ani v repozitári** —
+nastavujú sa výhradne cez environment premenné.
 
-- `ADMIN_EMAIL`
-- `ADMIN_PASSWORD`
-- `DEMO_USER_EMAIL`
-- `DEMO_USER_PASSWORD`
+Pravidlá:
 
-Predvolené demo:
+- V produkcii sú `ADMIN_EMAIL` aj `ADMIN_PASSWORD` **povinné**. Bez nich sa server
+  zámerne nespustí, aby nikdy nenabehol s predvídateľným heslom.
+- `ADMIN_PASSWORD` musí mať aspoň 12 znakov.
+- Demo účet (`DEMO_USER_EMAIL` / `DEMO_USER_PASSWORD`) sa vytvára **len vo vývoji**.
+  V produkcii sa ignoruje.
+- Zmena admin hesla zneplatní všetky existujúce prihlásenia.
 
-- `admin@example.com`
-- `admin123456`
-- `user@example.com`
-- `user123456`
+Pri deployi cez `render.yaml` sú `ADMIN_EMAIL` a `ADMIN_PASSWORD` označené ako
+`sync: false` — Render si ich vypýta v dashboarde a neukladá do repozitára.
 
 ## Registrácia používateľa
 

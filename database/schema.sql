@@ -2,7 +2,20 @@ CREATE TABLE IF NOT EXISTS users (
   id SERIAL PRIMARY KEY,
   email TEXT UNIQUE NOT NULL,
   password TEXT NOT NULL,
-  role TEXT NOT NULL DEFAULT 'user' CHECK (role IN ('user', 'admin'))
+  role TEXT NOT NULL DEFAULT 'user' CHECK (role IN ('user', 'admin')),
+  banned BOOLEAN NOT NULL DEFAULT false,
+  -- Zvýšením verzie sa okamžite zneplatnia všetky vydané tokeny používateľa.
+  token_version INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS login_logs (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  email TEXT,
+  timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  ip_address TEXT,
+  user_agent TEXT,
+  success BOOLEAN NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS profiles (
@@ -60,6 +73,8 @@ ALTER TABLE profiles ADD COLUMN IF NOT EXISTS age INTEGER;
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS gender TEXT;
 ALTER TABLE meal_plans ADD COLUMN IF NOT EXISTS variant1_meal_id INTEGER;
 ALTER TABLE meal_plans ADD COLUMN IF NOT EXISTS variant2_meal_id INTEGER;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS banned BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS token_version INTEGER NOT NULL DEFAULT 0;
 
 DO $$
 BEGIN
@@ -101,3 +116,7 @@ $$;
 
 CREATE INDEX IF NOT EXISTS idx_meal_plans_user_id ON meal_plans(user_id);
 CREATE INDEX IF NOT EXISTS idx_ingredients_meal_id ON ingredients(meal_id);
+CREATE INDEX IF NOT EXISTS idx_login_logs_timestamp ON login_logs(timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_login_logs_user_id ON login_logs(user_id);
+-- Zamykanie účtu počíta neúspešné pokusy pre daný email v poslednom okne.
+CREATE INDEX IF NOT EXISTS idx_login_logs_email_time ON login_logs(email, timestamp DESC);

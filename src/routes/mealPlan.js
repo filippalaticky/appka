@@ -4,6 +4,7 @@ const { authenticate } = require("../middleware/auth");
 const { asyncHandler } = require("../middleware/asyncHandler");
 const { calculateHealthMetrics } = require("../utils/calculator");
 const { generateWeeklyMealPlan } = require("../utils/mealPlanner");
+const { verifyCsrf } = require("../middleware/csrf");
 
 const router = express.Router();
 
@@ -62,6 +63,7 @@ router.get(
 router.post(
   "/generate",
   authenticate,
+  verifyCsrf,
   asyncHandler(async (req, res) => {
     const profileResult = await query("SELECT * FROM profiles WHERE user_id = $1", [req.user.id]);
     const profile = profileResult.rows[0];
