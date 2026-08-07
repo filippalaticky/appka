@@ -6,8 +6,15 @@ const mealPlanSection = document.getElementById("meal-plan-section");
 const mealPlanGrid = document.getElementById("meal-plan-grid");
 const logoutBtn = document.getElementById("logout-btn");
 const adminLink = document.getElementById("admin-link");
+const mealDetailModal = document.getElementById("meal-detail-modal");
+const modalCloseBtn = document.getElementById("modal-close-btn");
+const modalOverlay = document.getElementById("modal-overlay");
+const mealDetailName = document.getElementById("meal-detail-name");
+const mealDetailTotals = document.getElementById("meal-detail-totals");
+const mealDetailIngredients = document.getElementById("meal-detail-ingredients");
 
 let latestCalculations = null;
+
 const MEAL_TYPE_LABELS = {
   ranajky: "Raňajky",
   obed: "Obed",
@@ -43,8 +50,83 @@ function renderCalculations(calculations) {
     document.getElementById("protein-bar").style.width = `${percentFromCalories(calculations.calories, calculations.protein, "protein")}%`;
     document.getElementById("carbs-bar").style.width = `${percentFromCalories(calculations.calories, calculations.carbs, "carbs")}%`;
     document.getElementById("fat-bar").style.width = `${percentFromCalories(calculations.calories, calculations.fat, "fat")}%`;
-    document.getElementById("fiber-bar").style.width = `${Math.min(100, (calculations.fiber / 45) * 100)}%`;
+    document.getElementById("fiber-bar").style.width = `${Math.min(100, (calculations.fiber / 35) * 100)}%`;
   });
+}
+
+const mealDetailPanel = mealDetailModal.querySelector(".modal-panel");
+let lastFocusedMealButton = null;
+
+function closeMealDetailModal() {
+  if (mealDetailModal.classList.contains("hidden")) return;
+
+  // Zavieracia animácia dobehne, až potom sa modal skryje.
+  mealDetailModal.classList.add("is-closing");
+  window.setTimeout(() => {
+    mealDetailModal.classList.add("hidden");
+    mealDetailModal.classList.remove("is-closing");
+    if (lastFocusedMealButton) {
+      lastFocusedMealButton.focus();
+      lastFocusedMealButton = null;
+    }
+  }, 200);
+}
+
+function formatNumber(value) {
+  return Math.round(Number(value) * 10) / 10;
+}
+
+function renderMacroChips(source, prefix = "") {
+  const calories = source[`${prefix}calories`];
+  if (calories === null || calories === undefined) return "";
+
+  return `
+    <span class="meal-chip">${Math.round(Number(calories))} kcal</span>
+    <span class="meal-chip">P ${formatNumber(source[`${prefix}protein`])} g</span>
+    <span class="meal-chip">C ${formatNumber(source[`${prefix}carbs`])} g</span>
+    <span class="meal-chip">F ${formatNumber(source[`${prefix}fat`])} g</span>
+    <span class="meal-chip">Vl. ${formatNumber(source[`${prefix}fiber`])} g</span>
+  `;
+}
+
+async function openMealDetailModal(mealId, triggerButton) {
+  const response = await fetch(`/api/meal-plan/meal/${mealId}`);
+  const data = await response.json();
+
+  if (!response.ok) {
+    setMessage(data.message || "Nepodarilo sa načítať detail jedla.", true);
+    return;
+  }
+
+  lastFocusedMealButton = triggerButton || null;
+
+  mealDetailName.textContent = data.meal.name;
+  mealDetailTotals.innerHTML = renderMacroChips(data.meal);
+
+  mealDetailIngredients.innerHTML = data.ingredients
+    .map(
+      (ingredient, index) => `
+      <div class="ingredient-row" style="--row-index: ${index}">
+        <div>
+          <p class="font-semibold text-slate-100">${ingredient.ingredient_name}</p>
+          <p class="text-xs text-slate-400">${formatNumber(ingredient.grams)} g</p>
+        </div>
+        <div class="text-right text-xs text-slate-300">
+          <p>${Math.round(Number(ingredient.calories))} kcal</p>
+          <p>P ${formatNumber(ingredient.protein)} | C ${formatNumber(ingredient.carbs)} | F ${formatNumber(ingredient.fat)} | Vl. ${formatNumber(ingredient.fiber)}</p>
+        </div>
+      </div>`
+    )
+    .join("");
+
+  mealDetailModal.classList.remove("hidden", "is-closing");
+
+  // Trieda na paneli ostáva, preto sa animácia musí pri každom otvorení naštartovať znova.
+  mealDetailPanel.classList.remove("animate-modal-in");
+  void mealDetailPanel.offsetWidth;
+  mealDetailPanel.classList.add("animate-modal-in");
+
+  modalCloseBtn.focus();
 }
 
 function renderMealPlan(rows) {
@@ -65,22 +147,30 @@ function renderMealPlan(rows) {
       .map(
         (meal) => `
           <div class="mt-4">
-            <p class="font-semibold uppercase text-teal-300">${MEAL_TYPE_LABELS[meal.meal_type || meal.mealType] || "Jedlo"}</p>
-            <p class="text-sm text-slate-200 mt-1">1) ${meal.variant1}</p>
-            <p class="text-sm text-slate-200">2) ${meal.variant2}</p>
-            <div class="mt-2">
-              <span class="meal-chip">${meal.calories} kcal</span>
-              <span class="meal-chip">P ${meal.protein} g</span>
-              <span class="meal-chip">C ${meal.carbs} g</span>
-              <span class="meal-chip">F ${meal.fat} g</span>
-              <span class="meal-chip">Vl. ${meal.fiber} g</span>
-            </div>
+            <p class="font-semibold uppercase text-teal-300">${MEAL_TYPE_LABELS[meal.meal_type] || "Jedlo"}</p>
+            <button class="meal-detail-btn text-sm text-slate-200" data-meal-id="${meal.variant1_meal_id}">
+              <span>1) ${meal.variant1}</span>
+              <span class="block">${renderMacroChips(meal, "variant1_")}</span>
+            </button>
+            <button class="meal-detail-btn text-sm text-slate-200" data-meal-id="${meal.variant2_meal_id}">
+              <span>2) ${meal.variant2}</span>
+              <span class="block">${renderMacroChips(meal, "variant2_")}</span>
+            </button>
           </div>`
       )
       .join("");
 
     card.innerHTML = `<h3 class="text-lg font-semibold">${day}</h3>${mealsHtml}`;
     mealPlanGrid.appendChild(card);
+  });
+
+  mealPlanGrid.querySelectorAll(".meal-detail-btn").forEach((button) => {
+    button.addEventListener("click", async () => {
+      const mealId = Number(button.dataset.mealId);
+      if (!Number.isNaN(mealId)) {
+        await openMealDetailModal(mealId, button);
+      }
+    });
   });
 }
 
@@ -175,6 +265,12 @@ generatePlanBtn.addEventListener("click", async () => {
 logoutBtn.addEventListener("click", async () => {
   await fetch("/api/auth/logout", { method: "POST" });
   window.location.href = "/";
+});
+
+modalCloseBtn.addEventListener("click", closeMealDetailModal);
+modalOverlay.addEventListener("click", closeMealDetailModal);
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") closeMealDetailModal();
 });
 
 async function init() {

@@ -132,12 +132,165 @@ body {
   border: 1px solid rgba(45, 212, 191, 0.4);
 }
 
+.meal-detail-btn {
+  display: block;
+  width: 100%;
+  text-align: left;
+  margin-top: 0.4rem;
+  border-radius: 0.7rem;
+  border: 1px solid rgba(100, 116, 139, 0.45);
+  background: rgba(15, 23, 42, 0.6);
+  padding: 0.5rem 0.7rem;
+  cursor: pointer;
+  transition: transform 0.2s ease, border-color 0.25s ease, background 0.25s ease;
+}
+
+.meal-detail-btn:hover,
+.meal-detail-btn:focus-visible {
+  transform: translateX(2px);
+  border-color: rgba(45, 212, 191, 0.7);
+  background: rgba(20, 184, 166, 0.14);
+  outline: none;
+}
+
+.ingredient-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(100, 116, 139, 0.35);
+  background: rgba(30, 41, 59, 0.75);
+  padding: 0.6rem 0.75rem;
+  animation: ingredientIn 0.4s ease both;
+  animation-delay: calc(var(--row-index, 0) * 45ms);
+}
+
+/* --- Detail jedla --- */
+.modal-root {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+/* Dvojitá trieda prebije Tailwind .hidden, ktoré má nižšiu špecifickosť. */
+.modal-root.hidden {
+  display: none;
+}
+
+.modal-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.72);
+  backdrop-filter: blur(4px);
+  animation: modalFadeIn 0.25s ease both;
+}
+
+.modal-panel {
+  position: relative;
+  width: 100%;
+  max-width: 34rem;
+  max-height: 85vh;
+  overflow-y: auto;
+  border-radius: 1rem;
+  background: rgba(15, 23, 42, 0.97);
+  border: 1px solid rgba(100, 116, 139, 0.55);
+  padding: 1.5rem;
+  box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.6);
+}
+
+.animate-modal-in {
+  animation: modalSlideUp 0.34s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.modal-root.is-closing .modal-overlay {
+  animation: modalFadeOut 0.2s ease both;
+}
+
+.modal-root.is-closing .modal-panel {
+  animation: modalSlideDown 0.2s ease both;
+}
+
 .animate-fade-in {
   animation: fadeIn 0.7s ease both;
 }
 
 .animate-slide-in {
   animation: slideIn 0.7s ease both;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modalFadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes modalSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(26px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes modalSlideDown {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+  }
+}
+
+@keyframes ingredientIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in,
+  .animate-slide-in,
+  .animate-modal-in,
+  .ingredient-row,
+  .modal-overlay,
+  .modal-root.is-closing .modal-overlay,
+  .modal-root.is-closing .modal-panel {
+    animation: none;
+  }
+
+  .meal-detail-btn,
+  .progress-fill,
+  .btn-primary,
+  .btn-secondary {
+    transition: none;
+  }
 }
 
 @keyframes fadeIn {

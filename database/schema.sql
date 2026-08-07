@@ -23,6 +23,8 @@ CREATE TABLE IF NOT EXISTS meal_plans (
   meal_type TEXT NOT NULL,
   variant1 TEXT NOT NULL,
   variant2 TEXT NOT NULL,
+  variant1_meal_id INTEGER,
+  variant2_meal_id INTEGER,
   calories NUMERIC(8,2) NOT NULL,
   protein NUMERIC(8,2) NOT NULL,
   carbs NUMERIC(8,2) NOT NULL,
@@ -30,4 +32,55 @@ CREATE TABLE IF NOT EXISTS meal_plans (
   fiber NUMERIC(8,2) NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS meals (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  calories NUMERIC(8,2) NOT NULL,
+  protein NUMERIC(8,2) NOT NULL,
+  carbs NUMERIC(8,2) NOT NULL,
+  fat NUMERIC(8,2) NOT NULL,
+  fiber NUMERIC(8,2) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS ingredients (
+  id SERIAL PRIMARY KEY,
+  meal_id INTEGER NOT NULL REFERENCES meals(id) ON DELETE CASCADE,
+  ingredient_name TEXT NOT NULL,
+  grams NUMERIC(8,2) NOT NULL,
+  calories NUMERIC(8,2) NOT NULL,
+  protein NUMERIC(8,2) NOT NULL,
+  carbs NUMERIC(8,2) NOT NULL,
+  fat NUMERIC(8,2) NOT NULL,
+  fiber NUMERIC(8,2) NOT NULL
+);
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conname = 'meal_plans_variant1_meal_id_fkey'
+  ) THEN
+    ALTER TABLE meal_plans
+      ADD CONSTRAINT meal_plans_variant1_meal_id_fkey
+      FOREIGN KEY (variant1_meal_id) REFERENCES meals(id) ON DELETE SET NULL;
+  END IF;
+END
+$$;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conname = 'meal_plans_variant2_meal_id_fkey'
+  ) THEN
+    ALTER TABLE meal_plans
+      ADD CONSTRAINT meal_plans_variant2_meal_id_fkey
+      FOREIGN KEY (variant2_meal_id) REFERENCES meals(id) ON DELETE SET NULL;
+  END IF;
+END
+$$;
+
 CREATE INDEX IF NOT EXISTS idx_meal_plans_user_id ON meal_plans(user_id);
+CREATE INDEX IF NOT EXISTS idx_ingredients_meal_id ON ingredients(meal_id);
