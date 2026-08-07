@@ -1,0 +1,163 @@
+:root {
+  color-scheme: dark;
+}
+
+body {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.auth-bg {
+  background: radial-gradient(circle at top right, #0f766e, #0f172a 55%);
+}
+
+.app-bg {
+  background: linear-gradient(180deg, #020617, #0f172a);
+}
+
+.card-glass {
+  border-radius: 1.25rem;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+}
+
+.card-dark {
+  border-radius: 1rem;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(71, 85, 105, 0.5);
+  padding: 1.5rem;
+  box-shadow: 0 12px 30px -12px rgba(15, 23, 42, 0.85);
+}
+
+.metric-card {
+  border-radius: 1rem;
+  background: rgba(30, 41, 59, 0.9);
+  border: 1px solid rgba(100, 116, 139, 0.45);
+  padding: 1rem;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.4);
+}
+
+.metric-label {
+  font-size: 0.875rem;
+  color: #cbd5e1;
+}
+
+.metric-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-top: 0.25rem;
+}
+
+.form-input {
+  width: 100%;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(100, 116, 139, 0.7);
+  background: rgba(15, 23, 42, 0.85);
+  color: #e2e8f0;
+  padding: 0.72rem 0.85rem;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #14b8a6;
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.25);
+}
+
+.btn-primary,
+.btn-secondary {
+  border-radius: 0.75rem;
+  padding: 0.65rem 1.1rem;
+  font-weight: 600;
+  transition: transform 0.2s ease, opacity 0.2s ease, background 0.25s ease;
+}
+
+.btn-primary {
+  background: linear-gradient(90deg, #14b8a6, #0ea5e9);
+  color: #ffffff;
+}
+
+.btn-secondary {
+  background: rgba(30, 41, 59, 0.85);
+  border: 1px solid rgba(100, 116, 139, 0.6);
+  color: #e2e8f0;
+}
+
+.btn-primary:hover,
+.btn-secondary:hover {
+  transform: translateY(-1px);
+  opacity: 0.95;
+}
+
+.macro-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.95rem;
+  margin-bottom: 0.4rem;
+  color: #dbeafe;
+}
+
+.progress-wrap {
+  width: 100%;
+  height: 0.8rem;
+  background: rgba(51, 65, 85, 0.9);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  width: 0;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #14b8a6, #0ea5e9);
+  transition: width 0.8s ease;
+}
+
+.meal-card {
+  border: 1px solid rgba(100, 116, 139, 0.5);
+  border-radius: 1rem;
+  padding: 1rem;
+  background: rgba(30, 41, 59, 0.75);
+}
+
+.meal-chip {
+  display: inline-block;
+  margin-top: 0.3rem;
+  margin-right: 0.3rem;
+  border-radius: 999px;
+  padding: 0.22rem 0.6rem;
+  font-size: 0.75rem;
+  background: rgba(20, 184, 166, 0.22);
+  border: 1px solid rgba(45, 212, 191, 0.4);
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.7s ease both;
+}
+
+.animate-slide-in {
+  animation: slideIn 0.7s ease both;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}

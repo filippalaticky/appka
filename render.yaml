@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: nutri-planner-app
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: nutri-planner-db
+          property: connectionString
+      - key: ADMIN_EMAIL
+        value: admin@example.com
+      - key: ADMIN_PASSWORD
+        value: admin123456
+      - key: DEMO_USER_EMAIL
+        value: user@example.com
+      - key: DEMO_USER_PASSWORD
+        value: user123456
+
+databases:
+  - name: nutri-planner-db
+    databaseName: nutrition_app
+    plan: free

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="sk">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nutri Planner | Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/static/css/styles.css" />
+  </head>
+  <body class="app-bg min-h-screen text-slate-100">
+    <header class="border-b border-slate-700/60 sticky top-0 backdrop-blur-md bg-slate-900/60 z-10">
+      <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+        <h1 class="text-2xl font-bold tracking-tight">Admin panel</h1>
+        <div class="flex gap-2">
+          <a href="/app" class="btn-secondary">Späť do aplikácie</a>
+          <button id="logout-btn" class="btn-secondary">Odhlásiť sa</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-8 space-y-6">
+      <section class="grid md:grid-cols-3 gap-4">
+        <div class="metric-card">
+          <p class="metric-label">Používatelia</p>
+          <p id="users-count" class="metric-value">0</p>
+        </div>
+        <div class="metric-card">
+          <p class="metric-label">Vyplnené profily</p>
+          <p id="profiles-count" class="metric-value">0</p>
+        </div>
+        <div class="metric-card">
+          <p class="metric-label">Riadky jedálničkov</p>
+          <p id="meal-rows-count" class="metric-value">0</p>
+        </div>
+      </section>
+
+      <section class="card-dark animate-slide-in">
+        <h2 class="text-xl font-semibold mb-4">Prehľad používateľov</h2>
+        <div id="users-list" class="space-y-4"></div>
+      </section>
+    </main>
+
+    <script src="/static/js/admin.js" defer></script>
+  </body>
+</html>
