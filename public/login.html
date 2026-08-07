@@ -21,7 +21,9 @@
       </div>
       <p id="mode-hint" class="text-xs text-slate-300 mb-4 text-center"></p>
 
-      <form id="login-form" class="space-y-4">
+      <!-- method="post" je poistka: keby JavaScript zlyhal, prehliadač odošle
+           formulár natívne. Bez nej by GET dostal email aj heslo do adresy. -->
+      <form id="login-form" class="space-y-4" method="post" action="/api/auth/login">
         <div>
           <label for="email" class="text-sm text-slate-200">Email</label>
           <input

@@ -33,6 +33,20 @@ function showError(message) {
   errorEl.classList.remove("hidden");
 }
 
+/**
+ * Prihlasovacie údaje nepatria do adresy - dostanú sa do histórie prehliadača
+ * aj do logov servera. Keby ich tam čokoľvek dostalo, hneď sa odtiaľ odstránia.
+ */
+function stripCredentialsFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  if (!params.has("email") && !params.has("password")) return;
+
+  params.delete("email");
+  params.delete("password");
+  const query = params.toString();
+  window.history.replaceState({}, "", window.location.pathname + (query ? `?${query}` : ""));
+}
+
 /** Po odhlásení kvôli banu sa dôvod prenáša v URL. */
 function showBannedNotice() {
   const params = new URLSearchParams(window.location.search);
@@ -43,6 +57,7 @@ function showBannedNotice() {
 }
 
 async function checkAuth() {
+  stripCredentialsFromUrl();
   if (showBannedNotice()) return;
 
   const response = await fetch("/api/auth/me", { credentials: "same-origin" });
