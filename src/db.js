@@ -31,6 +31,7 @@ async function initDb() {
   await pool.query(schemaSql);
   await pool.query("ALTER TABLE profiles ADD COLUMN IF NOT EXISTS age INTEGER");
   await pool.query("ALTER TABLE profiles ADD COLUMN IF NOT EXISTS gender TEXT");
+  await pool.query("ALTER TABLE profiles ADD COLUMN IF NOT EXISTS allergies JSONB NOT NULL DEFAULT '[]'::jsonb");
   await pool.query("UPDATE profiles SET age = 30 WHERE age IS NULL");
   await pool.query("UPDATE profiles SET gender = 'muz' WHERE gender IS NULL");
   await pool.query("ALTER TABLE meal_plans ADD COLUMN IF NOT EXISTS variant1_meal_id INTEGER");

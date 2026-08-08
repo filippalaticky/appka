@@ -5,6 +5,7 @@ const { asyncHandler } = require("../middleware/asyncHandler");
 const { calculateHealthMetrics } = require("../utils/calculator");
 const { verifyCsrf } = require("../middleware/csrf");
 const { sanitizeText } = require("../utils/sanitize");
+const { ALLERGY_OPTIONS, normalizeAllergies, parseStoredAllergies } = require("../utils/allergies");
 
 const router = express.Router();
 
@@ -49,7 +50,12 @@ router.get("/", authenticate, asyncHandler(async (req, res) => {
     gender: profile.gender
   });
 
-  return res.json({ profile, calculations });
+  // Alergie sa vracajú ako pole, aby ich formulár vedel rovno zaškrtnúť.
+  return res.json({
+    profile: { ...profile, allergies: parseStoredAllergies(profile.allergies) },
+    calculations,
+    allergyOptions: ALLERGY_OPTIONS
+  });
 }));
 
 router.post("/", authenticate, verifyCsrf, asyncHandler(async (req, res) => {
@@ -63,6 +69,8 @@ router.post("/", authenticate, verifyCsrf, asyncHandler(async (req, res) => {
   const normalizedActivity = normalizeActivityLevel(activityLevel);
   const normalizedGoal = normalizeGoal(goal);
   const normalizedGender = normalizeGender(gender);
+  // Neznáme kľúče sa ticho zahodia - do databázy ide len overený zoznam.
+  const allergies = normalizeAllergies(req.body && req.body.allergies);
 
   if (
     !name ||
@@ -94,8 +102,8 @@ router.post("/", authenticate, verifyCsrf, asyncHandler(async (req, res) => {
   });
 
   const saveResult = await query(
-    `INSERT INTO profiles (user_id, name, height, weight, age, gender, activity_level, goal)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+    `INSERT INTO profiles (user_id, name, height, weight, age, gender, activity_level, goal, allergies)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb)
      ON CONFLICT (user_id)
      DO UPDATE SET name = EXCLUDED.name,
                    height = EXCLUDED.height,
@@ -103,7 +111,8 @@ router.post("/", authenticate, verifyCsrf, asyncHandler(async (req, res) => {
                    age = EXCLUDED.age,
                    gender = EXCLUDED.gender,
                    activity_level = EXCLUDED.activity_level,
-                   goal = EXCLUDED.goal
+                   goal = EXCLUDED.goal,
+                   allergies = EXCLUDED.allergies
      RETURNING *`,
     [
       req.user.id,
@@ -113,13 +122,14 @@ router.post("/", authenticate, verifyCsrf, asyncHandler(async (req, res) => {
       parsedAge,
       normalizedGender,
       normalizedActivity,
-      normalizedGoal
+      normalizedGoal,
+      JSON.stringify(allergies)
     ]
   );
 
   return res.json({
     message: "Profil bol uložený.",
-    profile: saveResult.rows[0],
+    profile: { ...saveResult.rows[0], allergies },
     calculations
   });
 }));

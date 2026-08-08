@@ -3,8 +3,15 @@ const { pool, query } = require("../db");
 const { authenticate } = require("../middleware/auth");
 const { asyncHandler } = require("../middleware/asyncHandler");
 const { calculateHealthMetrics } = require("../utils/calculator");
-const { generateWeeklyMealPlan } = require("../utils/mealPlanner");
+const { generateWeeklyMealPlan, findViolatedAllergens } = require("../utils/mealPlanner");
 const { verifyCsrf } = require("../middleware/csrf");
+const { parseStoredAllergies } = require("../utils/allergies");
+
+/** Alergie prihláseného používateľa z jeho profilu. */
+async function userAllergies(userId) {
+  const result = await query("SELECT allergies FROM profiles WHERE user_id = $1", [userId]);
+  return result.rows[0] ? parseStoredAllergies(result.rows[0].allergies) : [];
+}
 
 const router = express.Router();
 
@@ -56,6 +63,21 @@ router.get(
       [mealId]
     );
 
+    // Jedálniček uložený pred zmenou alergií môže obsahovať zakázanú surovinu.
+    // Také jedlo sa nezobrazí - používateľ si vygeneruje plán nanovo.
+    const allergies = await userAllergies(req.user.id);
+    const violated = findViolatedAllergens(
+      ingredientResult.rows.map((row) => row.ingredient_name),
+      allergies
+    );
+
+    if (violated.length > 0) {
+      return res.status(409).json({
+        message: "Toto jedlo nezodpovedá tvojim alergiám. Vygeneruj si jedálniček nanovo.",
+        allergyConflict: true
+      });
+    }
+
     return res.json({ meal, ingredients: ingredientResult.rows });
   })
 );
@@ -81,7 +103,17 @@ router.post(
       gender: profile.gender
     });
 
-    const weeklyRows = generateWeeklyMealPlan(macros);
+    const allergies = parseStoredAllergies(profile.allergies);
+
+    let weeklyRows;
+    try {
+      weeklyRows = generateWeeklyMealPlan(macros, allergies);
+    } catch (error) {
+      // Pri príliš veľa alergiách sa jedálniček poskladať nedá - to nie je
+      // chyba servera, ale nesplniteľné zadanie.
+      return res.status(422).json({ message: error.message });
+    }
+
     const client = await pool.connect();
 
     try {

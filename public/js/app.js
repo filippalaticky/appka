@@ -20,8 +20,36 @@ const modalOverlay = document.getElementById("modal-overlay");
 const mealDetailName = document.getElementById("meal-detail-name");
 const mealDetailTotals = document.getElementById("meal-detail-totals");
 const mealDetailIngredients = document.getElementById("meal-detail-ingredients");
+const allergyList = document.getElementById("allergy-list");
 
 let latestCalculations = null;
+
+// Záloha pre prípad, že server zoznam nepošle (napr. profil ešte neexistuje).
+const DEFAULT_ALLERGY_OPTIONS = [
+  { key: "laktoza", label: "Laktózová intolerancia" },
+  { key: "lepok", label: "Bezlepková diéta" },
+  { key: "orechy", label: "Alergia na orechy" },
+  { key: "ryby", label: "Alergia na ryby" },
+  { key: "vajcia", label: "Alergia na vajcia" },
+  { key: "soja", label: "Alergia na sóju" },
+  { key: "citrusy", label: "Alergia na citrusy" }
+];
+
+function renderAllergyOptions(options, selected = []) {
+  allergyList.innerHTML = (options || DEFAULT_ALLERGY_OPTIONS)
+    .map(
+      (option) => `
+      <label class="allergy-option">
+        <input type="checkbox" value="${escapeHtml(option.key)}" ${selected.includes(option.key) ? "checked" : ""} />
+        <span>${escapeHtml(option.label)}</span>
+      </label>`
+    )
+    .join("");
+}
+
+function selectedAllergies() {
+  return [...allergyList.querySelectorAll("input[type=checkbox]:checked")].map((input) => input.value);
+}
 
 const MEAL_TYPE_LABELS = {
   ranajky: "Raňajky",
@@ -213,8 +241,14 @@ async function getCurrentUser() {
 
 async function loadProfile() {
   const response = await apiFetch("/api/profile");
-  if (!response.ok) return;
+  if (!response.ok) {
+    renderAllergyOptions();
+    return;
+  }
   const data = await response.json();
+
+  // Checkboxy sa vykreslia vždy, aj keď profil ešte neexistuje.
+  renderAllergyOptions(data.allergyOptions, (data.profile && data.profile.allergies) || []);
   if (!data.profile) return;
 
   document.getElementById("name").value = data.profile.name || "";
@@ -248,7 +282,8 @@ profileForm.addEventListener("submit", async (event) => {
     weight: document.getElementById("weight").value,
     gender: document.getElementById("gender").value,
     activityLevel: document.getElementById("activity-level").value,
-    goal: document.getElementById("goal").value
+    goal: document.getElementById("goal").value,
+    allergies: selectedAllergies()
   };
 
   const response = await apiFetch("/api/profile", {
@@ -263,7 +298,13 @@ profileForm.addEventListener("submit", async (event) => {
   }
 
   renderCalculations(data.calculations);
-  setMessage("Profil uložený a makrá vypočítané.");
+  // Už vygenerovaný jedálniček alergie nezohľadňuje, kým sa nevytvorí nanovo.
+  const hasPlan = mealPlanGrid.children.length > 0;
+  setMessage(
+    hasPlan
+      ? "Profil uložený. Ak si menil alergie, vytvor jedálniček nanovo."
+      : "Profil uložený a makrá vypočítané."
+  );
 });
 
 generatePlanBtn.addEventListener("click", async () => {

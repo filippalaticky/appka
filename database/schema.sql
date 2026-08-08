@@ -26,7 +26,9 @@ CREATE TABLE IF NOT EXISTS profiles (
   age INTEGER NOT NULL,
   gender TEXT NOT NULL,
   activity_level TEXT NOT NULL,
-  goal TEXT NOT NULL
+  goal TEXT NOT NULL,
+  -- Zoznam alergií / intolerancií, napr. ["laktoza","lepok"].
+  allergies JSONB NOT NULL DEFAULT '[]'::jsonb
 );
 
 CREATE TABLE IF NOT EXISTS meal_plans (
@@ -71,6 +73,7 @@ CREATE TABLE IF NOT EXISTS ingredients (
 -- takže nové stĺpce treba doplniť zvlášť - inak by referencie nižšie zlyhali.
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS age INTEGER;
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS gender TEXT;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS allergies JSONB NOT NULL DEFAULT '[]'::jsonb;
 ALTER TABLE meal_plans ADD COLUMN IF NOT EXISTS variant1_meal_id INTEGER;
 ALTER TABLE meal_plans ADD COLUMN IF NOT EXISTS variant2_meal_id INTEGER;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS banned BOOLEAN NOT NULL DEFAULT false;
