@@ -1,3 +1,9 @@
+/* IIFE: klasické <script> tagy zdieľajú jeden globálny rozsah, takže bez neho
+ * by sa deklarácie z common.js a tohto súboru navzájom prekryli a skript by
+ * skončil na "Identifier has already been declared". */
+(function () {
+  "use strict";
+
 const { escapeHtml, apiFetch } = window.appCommon;
 
 const usersCount = document.getElementById("users-count");
@@ -185,3 +191,4 @@ async function init() {
 }
 
 init();
+})();

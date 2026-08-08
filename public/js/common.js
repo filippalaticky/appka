@@ -1,4 +1,11 @@
-/* Spoločné pomôcky pre všetky stránky: escapovanie výstupu, CSRF a ban handling. */
+/* Spoločné pomôcky pre všetky stránky: escapovanie výstupu, CSRF a ban handling.
+ *
+ * Celý súbor je v IIFE. Klasické <script> tagy zdieľajú jeden globálny rozsah,
+ * takže bez neho by `function apiFetch` kolidovalo s `const { apiFetch }`
+ * v stránkových skriptoch a tie by sa vôbec nenaparsovali.
+ * Von ide výhradne window.appCommon. */
+(function () {
+  "use strict";
 
 const HTML_ESCAPES = {
   "&": "&amp;",
@@ -57,4 +64,5 @@ async function apiFetch(url, options = {}) {
   return response;
 }
 
-window.appCommon = { escapeHtml, apiFetch, readCookie };
+  window.appCommon = { escapeHtml, apiFetch, readCookie };
+})();
