@@ -21,10 +21,19 @@ services:
         sync: false
       - key: ADMIN_PASSWORD
         sync: false
-      # Voliteľné: domény, ktoré smú volať API z iného originu (oddelené čiarkou).
+      # Dvaja bežní používatelia. Aplikácia nemá registráciu, takže toto sú
+      # jediné účty, ktoré vzniknú - a účet mimo tohto zoznamu sa zabanuje.
+      - key: USER1_EMAIL
+        sync: false
+      - key: USER1_PASSWORD
+        sync: false
+      - key: USER2_EMAIL
+        sync: false
+      - key: USER2_PASSWORD
+        sync: false
+      # Voliteľné: cudzie domény, ktoré smú volať API (vlastná je povolená vždy).
       - key: ALLOWED_ORIGINS
         sync: false
-    # Demo účet sa v produkcii zámerne nevytvára - bol by verejne známym prístupom.
 
 databases:
   - name: nutri-planner-db

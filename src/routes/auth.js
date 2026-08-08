@@ -25,14 +25,6 @@ const loginLimiter = rateLimit({
   message: { message: "Príliš veľa pokusov o prihlásenie. Skús to o 10 minút." }
 });
 
-const registerLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000,
-  limit: 10,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { message: "Príliš veľa registrácií z tejto adresy. Skús to neskôr." }
-});
-
 function tokenCookieOptions() {
   return {
     httpOnly: true,
@@ -135,48 +127,11 @@ router.post(
   })
 );
 
-router.post(
-  "/register",
-  registerLimiter,
-  asyncHandler(async (req, res) => {
-    const email = normalizeEmail(req.body && req.body.email);
-    const password = req.body && req.body.password;
-
-    if (!email) {
-      return res.status(400).json({ message: "Zadaj platnú emailovú adresu." });
-    }
-
-    if (typeof password !== "string" || password.length < MIN_PASSWORD_LENGTH || password.length > 200) {
-      return res
-        .status(400)
-        .json({ message: `Heslo musí mať aspoň ${MIN_PASSWORD_LENGTH} znakov.` });
-    }
-
-    const exists = await query("SELECT id FROM users WHERE email = $1", [email]);
-    if (exists.rows.length > 0) {
-      return res.status(409).json({ message: "Používateľ s týmto emailom už existuje." });
-    }
-
-    const hash = await bcrypt.hash(password, BCRYPT_ROUNDS);
-    // Rola je natvrdo 'user' - nikdy sa neberie zo vstupu, inak by si klient
-    // mohol pri registrácii vypýtať admina.
-    const inserted = await query(
-      `INSERT INTO users (email, password, role)
-       VALUES ($1, $2, 'user')
-       RETURNING id, email, role, token_version`,
-      [email, hash]
-    );
-
-    const created = inserted.rows[0];
-    establishSession(res, created);
-    await recordLoginAttempt({ userId: created.id, email, req, success: true });
-
-    return res.status(201).json({
-      message: "Registrácia úspešná.",
-      user: { id: created.id, email: created.email, role: created.role }
-    });
-  })
-);
+// Verejná registrácia zámerne neexistuje. Účty vznikajú výhradne pri štarte
+// servera z environment premenných, takže cudzí účet nemá ako pribudnúť.
+router.post("/register", (req, res) => {
+  return res.status(404).json({ message: "Registrácia nie je dostupná. Účty prideľuje správca." });
+});
 
 router.post(
   "/logout",

@@ -67,6 +67,24 @@ npm run dev
 
 Tabuľky sa vytvoria automaticky pri štarte servera cez `database/schema.sql`.
 
+## Účty a prístup
+
+Aplikácia **nemá verejnú registráciu**. Účty vznikajú výhradne pri štarte servera
+z environment premenných, takže cudzí účet nemá ako pribudnúť.
+
+| Premenné | Rola | Min. dĺžka hesla |
+|---|---|---|
+| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | admin | 12 |
+| `USER1_EMAIL` / `USER1_PASSWORD` | user | 8 |
+| `USER2_EMAIL` / `USER2_PASSWORD` | user | 8 |
+
+- **Zmena hesla** = prepísať premennú a spustiť redeploy. Zmena okamžite
+  zneplatní všetky existujúce prihlásenia daného účtu.
+- **Účet, ktorý nie je v premenných, sa pri štarte zabanuje.** Ban je vratný —
+  v admin paneli sa dá zrušiť a dáta ostávajú zachované.
+- Rola `admin` patrí vždy len účtu z `ADMIN_EMAIL`. Ak sa premenná zmení,
+  pôvodnému adminovi sa práva odoberú.
+
 ## Admin prístup
 
 Admin účet sa pri štarte servera vytvorí (alebo aktualizuje) podľa premenných
@@ -87,7 +105,9 @@ Pri deployi cez `render.yaml` sú `ADMIN_EMAIL` a `ADMIN_PASSWORD` označené ak
 
 ## Registrácia používateľa
 
-Na login stránke je prepínač **Prihlásenie / Registrácia**. Nový účet sa vytvorí cez API a používateľ sa hneď prihlási.
+Registrácia **neexistuje** a endpoint `/api/auth/register` vracia 404. Login stránka
+obsahuje výhradne prihlasovací formulár. Účty sa pridávajú cez environment premenné
+(pozri sekciu *Účty a prístup*), takže cudzí účet nemá ako vzniknúť.
 
 ## Deploy na Render.com
 

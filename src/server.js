@@ -68,16 +68,21 @@ const allowedOrigins = (process.env.ALLOWED_ORIGINS || "")
   .filter(Boolean);
 
 app.use(
-  cors({
-    origin(origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-      return callback(new Error("Táto doména nemá povolený prístup."));
-    },
-    credentials: true,
-    methods: ["GET", "POST"],
-    allowedHeaders: ["Content-Type", "X-CSRF-Token"]
+  cors((req, callback) => {
+    const origin = req.headers.origin;
+    // Prehliadač pošle Origin aj pri POST na vlastnú doménu, preto sa musí
+    // porovnať s adresou servera. Bez toho by každý POST z appky skončil chybou.
+    const sameOrigin = origin === `${req.protocol}://${req.get("host")}`;
+    const allowed = !origin || sameOrigin || allowedOrigins.includes(origin);
+
+    // Cudzia doména sa neodmieta výnimkou, len nedostane CORS hlavičky -
+    // prehliadač jej odpoveď zahodí sám. Výnimka by z toho spravila chybu 500.
+    callback(null, {
+      origin: allowed,
+      credentials: true,
+      methods: ["GET", "POST"],
+      allowedHeaders: ["Content-Type", "X-CSRF-Token"]
+    });
   })
 );
 

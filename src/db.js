@@ -93,8 +93,50 @@ async function initDb() {
     $$`
   );
 
-  await seedAdmin();
-  await seedDemoUser();
+  const adminEmail = await seedAdmin();
+  const userEmails = await seedUsers();
+  await closeOffStrayAccounts(adminEmail, userEmails);
+}
+
+/**
+ * Vytvorí alebo zosúladí účet podľa environment premenných.
+ *
+ * Heslo sa prepisuje LEN ak sa naozaj zmenilo. bcrypt dáva pri každom volaní iný
+ * hash, takže bez tohto porovnania by každý redeploy zvýšil token_version
+ * a odhlásil všetkých používateľov.
+ */
+async function upsertAccount({ email, password, role }) {
+  const existing = await pool.query(
+    "SELECT id, password, role, banned FROM users WHERE email = $1",
+    [email]
+  );
+  const user = existing.rows[0];
+
+  if (!user) {
+    const hash = await bcrypt.hash(password, BCRYPT_ROUNDS);
+    await pool.query("INSERT INTO users (email, password, role) VALUES ($1, $2, $3)", [email, hash, role]);
+    console.log(`Vytvorený účet ${email} (${role}).`);
+    return;
+  }
+
+  const passwordUnchanged = await bcrypt.compare(password, user.password);
+
+  if (passwordUnchanged) {
+    // Rolu a ban aj tak zosúladíme - ale bez zneplatnenia prihlásení.
+    if (user.role !== role || user.banned) {
+      await pool.query("UPDATE users SET role = $2, banned = false WHERE id = $1", [user.id, role]);
+    }
+    return;
+  }
+
+  const hash = await bcrypt.hash(password, BCRYPT_ROUNDS);
+  await pool.query(
+    `UPDATE users
+     SET password = $2, role = $3, banned = false, token_version = token_version + 1
+     WHERE id = $1`,
+    [user.id, hash, role]
+  );
+  console.log(`Zmenené heslo účtu ${email} - existujúce prihlásenia boli zneplatnené.`);
 }
 
 // Prihlasovacie údaje nikdy nepochádzajú z kódu. V produkcii sa server radšej
@@ -115,21 +157,8 @@ async function seedAdmin() {
     throw new Error("ADMIN_PASSWORD musí mať aspoň 12 znakov.");
   }
 
-  const adminPasswordHash = await bcrypt.hash(adminPassword, BCRYPT_ROUNDS);
-
   const normalizedAdminEmail = adminEmail.toLowerCase().trim();
-
-  // Zmena hesla zvýši token_version, takže staré prihlásenia okamžite prestanú platiť.
-  await pool.query(
-    `INSERT INTO users (email, password, role)
-     VALUES ($1, $2, 'admin')
-     ON CONFLICT (email)
-     DO UPDATE SET role = 'admin',
-                   password = EXCLUDED.password,
-                   banned = false,
-                   token_version = users.token_version + 1`,
-    [normalizedAdminEmail, adminPasswordHash]
-  );
+  await upsertAccount({ email: normalizedAdminEmail, password: adminPassword, role: "admin" });
 
   // Po zmene ADMIN_EMAIL by pôvodný admin účet ostal v databáze s admin právami
   // a starým heslom - čiže ako otvorené zadné dvierka. Admin práva má vždy
@@ -148,25 +177,61 @@ async function seedAdmin() {
       `Odobrané admin práva účtom mimo ADMIN_EMAIL: ${demoted.rows.map((row) => row.email).join(", ")}`
     );
   }
+
+  return normalizedAdminEmail;
 }
 
-// Demo účet je vývojová pomôcka - v produkcii by bol otvorenými dverami.
-async function seedDemoUser() {
-  const demoEmail = process.env.DEMO_USER_EMAIL;
-  const demoPassword = process.env.DEMO_USER_PASSWORD;
+/**
+ * Používateľské účty. Registrácia v aplikácii neexistuje, takže toto je jediný
+ * spôsob, ako účet vznikne. Heslo sa pri každom štarte prepíše podľa premennej -
+ * zmena hesla je teda len zmena premennej a redeploy.
+ */
+async function seedUsers() {
+  const seeded = [];
 
-  if (isProduction || !demoEmail || !demoPassword) {
-    return;
+  for (const slot of ["USER1", "USER2"]) {
+    const email = process.env[`${slot}_EMAIL`];
+    const password = process.env[`${slot}_PASSWORD`];
+
+    if (!email || !password) continue;
+
+    if (password.length < 8) {
+      throw new Error(`${slot}_PASSWORD musí mať aspoň 8 znakov.`);
+    }
+
+    const normalized = email.toLowerCase().trim();
+    await upsertAccount({ email: normalized, password, role: "user" });
+    seeded.push(normalized);
   }
 
-  const demoPasswordHash = await bcrypt.hash(demoPassword, BCRYPT_ROUNDS);
-  await pool.query(
-    `INSERT INTO users (email, password, role)
-     VALUES ($1, $2, 'user')
-     ON CONFLICT (email)
-     DO UPDATE SET password = EXCLUDED.password`,
-    [demoEmail.toLowerCase().trim(), demoPasswordHash]
+  if (seeded.length === 0) {
+    console.warn("USER1_/USER2_ premenné nie sú nastavené - existuje iba admin účet.");
+  }
+
+  return seeded;
+}
+
+/**
+ * Systém je uzavretý: platia len účty definované v premenných. Čokoľvek iné
+ * (staré demo účty, zvyšky po testoch) sa zabanuje a okamžite odhlási.
+ * Ban je vratný - v admin paneli sa dá zrušiť a dáta ostávajú zachované.
+ */
+async function closeOffStrayAccounts(adminEmail, userEmails) {
+  const allowed = [adminEmail, ...userEmails].filter(Boolean);
+  if (allowed.length === 0) return;
+
+  const banned = await pool.query(
+    `UPDATE users
+     SET banned = true,
+         token_version = token_version + 1
+     WHERE banned = false AND email <> ALL($1::text[])
+     RETURNING email`,
+    [allowed]
   );
+
+  if (banned.rows.length > 0) {
+    console.warn(`Zabanované účty mimo konfigurácie: ${banned.rows.map((row) => row.email).join(", ")}`);
+  }
 }
 
 module.exports = {
