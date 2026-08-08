@@ -75,8 +75,11 @@ z environment premenných, takže cudzí účet nemá ako pribudnúť.
 | Premenné | Rola | Min. dĺžka hesla |
 |---|---|---|
 | `ADMIN_EMAIL` / `ADMIN_PASSWORD` | admin | 12 |
-| `USER1_EMAIL` / `USER1_PASSWORD` | user | 8 |
-| `USER2_EMAIL` / `USER2_PASSWORD` | user | 8 |
+| `USER<N>_EMAIL` / `USER<N>_PASSWORD` | user | 8 |
+
+**Pridanie ďalšieho používateľa** = pridať dvojicu premenných `USER3_EMAIL` /
+`USER3_PASSWORD` (a redeploy). Počet nie je obmedzený a čísla nemusia ísť za
+sebou — server si nájde všetky `USER<N>_EMAIL`, ktoré existujú.
 
 - **Zmena hesla** = prepísať premennú a spustiť redeploy. Zmena okamžite
   zneplatní všetky existujúce prihlásenia daného účtu.

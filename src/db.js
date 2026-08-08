@@ -188,25 +188,43 @@ async function seedAdmin() {
  * zmena hesla je teda len zmena premennej a redeploy.
  */
 async function seedUsers() {
+  // Počet účtov nie je obmedzený - nájdu sa všetky premenné USER<N>_EMAIL,
+  // takže pridanie ďalšieho používateľa nevyžaduje zásah do kódu.
+  const slots = Object.keys(process.env)
+    .map((key) => key.match(/^USER(\d+)_EMAIL$/))
+    .filter(Boolean)
+    .map((match) => Number(match[1]))
+    .sort((a, b) => a - b);
+
   const seeded = [];
 
-  for (const slot of ["USER1", "USER2"]) {
-    const email = process.env[`${slot}_EMAIL`];
-    const password = process.env[`${slot}_PASSWORD`];
+  for (const slot of slots) {
+    const email = process.env[`USER${slot}_EMAIL`];
+    const password = process.env[`USER${slot}_PASSWORD`];
 
-    if (!email || !password) continue;
+    if (!email || !password) {
+      console.warn(`USER${slot}_EMAIL je nastavené, ale USER${slot}_PASSWORD chýba - účet sa preskakuje.`);
+      continue;
+    }
 
     if (password.length < 8) {
-      throw new Error(`${slot}_PASSWORD musí mať aspoň 8 znakov.`);
+      throw new Error(`USER${slot}_PASSWORD musí mať aspoň 8 znakov.`);
     }
 
     const normalized = email.toLowerCase().trim();
+    if (seeded.includes(normalized)) {
+      console.warn(`Email ${normalized} je uvedený viackrát - použije sa prvý výskyt.`);
+      continue;
+    }
+
     await upsertAccount({ email: normalized, password, role: "user" });
     seeded.push(normalized);
   }
 
   if (seeded.length === 0) {
-    console.warn("USER1_/USER2_ premenné nie sú nastavené - existuje iba admin účet.");
+    console.warn("Nie sú nastavené žiadne USER<N>_ premenné - existuje iba admin účet.");
+  } else {
+    console.log(`Používateľské účty podľa konfigurácie: ${seeded.join(", ")}`);
   }
 
   return seeded;

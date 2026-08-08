@@ -21,8 +21,8 @@ services:
         sync: false
       - key: ADMIN_PASSWORD
         sync: false
-      # Dvaja bežní používatelia. Aplikácia nemá registráciu, takže toto sú
-      # jediné účty, ktoré vzniknú - a účet mimo tohto zoznamu sa zabanuje.
+      # Bežní používatelia. Počet nie je obmedzený - ďalší sa pridá dvojicou
+      # USER3_EMAIL / USER3_PASSWORD priamo v Render dashboarde.
       - key: USER1_EMAIL
         sync: false
       - key: USER1_PASSWORD
